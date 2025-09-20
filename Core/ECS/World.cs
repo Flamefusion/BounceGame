@@ -58,10 +58,14 @@ namespace BounceGame.Core.ECS
         private ComponentManager<T> GetComponentManager<T>() where T : class, IComponent
         {
             var type = typeof(T);
-            if (!_componentManagers.TryGetValue(type, out object manager))
+            if (!_componentManagers.TryGetValue(type, out object? manager) || manager == null)
             {
                 manager = new ComponentManager<T>();
                 _componentManagers[type] = manager;
+            }
+            if (manager == null)
+            {
+                throw new InvalidOperationException($"Component manager for type {type.Name} could not be created.");
             }
             return (ComponentManager<T>)manager;
         }
@@ -96,7 +100,7 @@ namespace BounceGame.Core.ECS
         /// <summary>
         /// Tries to get a component (safe version)
         /// </summary>
-        public bool TryGetComponent<T>(Entity entity, out T component) where T : class, IComponent
+        public bool TryGetComponent<T>(Entity entity, out T? component) where T : class, IComponent
         {
             return GetComponentManager<T>().TryGetComponent(entity, out component);
         }

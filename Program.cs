@@ -65,7 +65,7 @@ namespace BounceGame
             // Test 4: Component manipulation
             Console.WriteLine("\n4. Testing component manipulation...");
             
-            if (world.TryGetComponent<Rigidbody>(entity1, out var rb1))
+            if (world.TryGetComponent<Rigidbody>(entity1, out var rb1) && rb1 != null)
             {
                 Console.WriteLine($"Before force: {rb1}");
                 rb1.AddForce(new Vector3(10, 0, 0));
@@ -111,7 +111,7 @@ namespace BounceGame
             
             Console.WriteLine("\n=== ECS Foundation Test Complete ===");
             Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
+            Console.WriteLine("Program finished.");
         }
     }
 }

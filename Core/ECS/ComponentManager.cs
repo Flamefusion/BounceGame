@@ -40,7 +40,7 @@ namespace BounceGame.Core.ECS
         /// </summary>
         public T GetComponent(Entity entity)
         {
-            if (_components.TryGetValue(entity.ID, out T component))
+            if (_components.TryGetValue(entity.ID, out T? component) && component != null)
                 return component;
             
             throw new InvalidOperationException($"Entity {entity} does not have component {typeof(T).Name}");
@@ -49,7 +49,7 @@ namespace BounceGame.Core.ECS
         /// <summary>
         /// Tries to get a component (safe version)
         /// </summary>
-        public bool TryGetComponent(Entity entity, out T component)
+        public bool TryGetComponent(Entity entity, out T? component)
         {
             return _components.TryGetValue(entity.ID, out component);
         }

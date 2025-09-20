@@ -16,7 +16,7 @@ namespace BounceGame.Core.ECS
         }
         
         public bool Equals(Entity other) => ID == other.ID;
-        public override bool Equals(object obj) => obj is Entity entity && Equals(entity);
+        public override bool Equals(object? obj) => obj is Entity entity && Equals(entity);
         public override int GetHashCode() => ID.GetHashCode();
         public override string ToString() => $"Entity({ID})";
         
