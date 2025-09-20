@@ -202,7 +202,7 @@ namespace BounceGame.Core.Graphics
     /// <summary>
     /// Win32 API functions for window and OpenGL context creation
     /// </summary>
-    internal static class Win32
+    internal static partial class Win32
     {
         // Window class constants
         public const int CS_OWNDC = 0x0020;

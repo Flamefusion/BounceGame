@@ -1,7 +1,10 @@
-﻿// Program.cs - OpenGL Foundation Test
+﻿// Program.cs - ECS + OpenGL Integration Demo
 using System;
 using System.Numerics;
-using BounceGame.Core.Graphics;
+using BounceGame.Core.Game;
+using BounceGame.Core.ECS;
+using BounceGame.Components;
+using BounceGame.Systems;
 
 namespace BounceGame
 {
@@ -9,139 +12,198 @@ namespace BounceGame
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("=== OpenGL Foundation Test ===\n");
+            Console.WriteLine("=== ECS + OpenGL Integration Demo ===\n");
             
-            // Create window and initialize OpenGL
-            using var window = new Window("Bounce Game - OpenGL Test", 800, 600);
-            using var renderer = new Renderer(800, 600);
+            using var game = new GameManager("Bounce Game - ECS Integration", 1024, 768);
             
-            Console.WriteLine("Window and renderer created successfully!");
+            // Add systems to the game
+            var movementSystem = new MovementSystem(game.GetWorld());
+            game.AddSystem(movementSystem);
+            
+            Console.WriteLine("Game initialized with ECS + OpenGL integration");
             Console.WriteLine("Controls:");
-            Console.WriteLine("  WASD - Move red square");
-            Console.WriteLine("  SPACE - Change color");
+            Console.WriteLine("  WASD - Move player (red square)");
+            Console.WriteLine("  SPACE - Add new entity");
             Console.WriteLine("  ESC - Exit");
-            Console.WriteLine("\nStarting render loop...\n");
+            Console.WriteLine("\nStarting game loop...\n");
             
-            // Game state
-            var playerPos = new Vector2(0, 0);
-            var playerSize = new Vector2(50, 50);
-            var playerColor = new Vector4(1.0f, 0.3f, 0.3f, 1.0f); // Red
-            var backgroundColor = new Vector4(0.1f, 0.1f, 0.2f, 1.0f); // Dark blue
+            // Create initial entities
+            SetupGameWorld(game);
             
-            float speed = 200.0f; // pixels per second
-            bool colorChanged = false;
-            
+            // Game loop timing
             var lastTime = DateTime.Now;
             int frameCount = 0;
             var fpsTimer = DateTime.Now;
             
             // Main game loop
-            while (!window.ShouldClose)
+            while (!game.ShouldClose)
             {
                 // Calculate delta time
                 var currentTime = DateTime.Now;
                 float deltaTime = (float)(currentTime - lastTime).TotalSeconds;
                 lastTime = currentTime;
                 
-                // Poll window events and input
-                window.PollEvents();
+                // Update game logic
+                game.Update(deltaTime);
                 
                 // Handle input
-                HandleInput(window, ref playerPos, ref playerColor, ref colorChanged, speed, deltaTime);
+                HandleGameInput(game);
                 
-                // Keep player in bounds
-                playerPos.X = Math.Clamp(playerPos.X, -400 + playerSize.X/2, 400 - playerSize.X/2);
-                playerPos.Y = Math.Clamp(playerPos.Y, -300 + playerSize.Y/2, 300 - playerSize.Y/2);
+                // Render everything
+                game.Render();
                 
-                // Render
-                window.Clear(backgroundColor.X, backgroundColor.Y, backgroundColor.Z, backgroundColor.W);
-                
-                // Draw some background elements
-                DrawBackground(renderer);
-                
-                // Draw player
-                renderer.DrawQuad(playerPos, playerSize, playerColor);
-                
-                // Present frame
-                window.SwapBuffers();
-                
-                // FPS counter
+                // FPS counter and debug info
                 frameCount++;
                 if ((DateTime.Now - fpsTimer).TotalSeconds >= 1.0)
                 {
-                    Console.WriteLine($"FPS: {frameCount}, Player: ({playerPos.X:F1}, {playerPos.Y:F1})");
+                    Console.WriteLine($"FPS: {frameCount}");
+                    Console.WriteLine(game.GetDebugInfo());
+                    Console.WriteLine(); // Empty line for readability
+                    
                     frameCount = 0;
                     fpsTimer = DateTime.Now;
                 }
             }
             
-            Console.WriteLine("\nShutting down gracefully...");
+            Console.WriteLine("Game shutting down gracefully...");
         }
         
-        static void HandleInput(Window window, ref Vector2 playerPos, ref Vector4 playerColor, 
-                               ref bool colorChanged, float speed, float deltaTime)
+        static void SetupGameWorld(GameManager game)
         {
-            float movement = speed * deltaTime;
+            var world = game.GetWorld();
             
-            // Movement with WASD
-            if (window.IsWPressed())
-                playerPos.Y += movement;
-            if (window.IsSPressed()) 
-                playerPos.Y -= movement;
-            if (window.IsAPressed())
-                playerPos.X -= movement;
-            if (window.IsDPressed())
-                playerPos.X += movement;
+            // Create player entity (red, controllable)
+            var player = game.CreatePhysicsEntity(
+                position: new Vector2(0, 0),
+                size: new Vector2(50, 50),
+                color: new Vector4(1.0f, 0.3f, 0.3f, 1.0f), // Red
+                mass: 1.0f
+            );
             
-            // Color change with space (just pressed, not held)
-            if (window.IsSpaceJustPressed() && !colorChanged)
-            {
-                // Cycle through some colors
-                if (Math.Abs(playerColor.X - 1.0f) < 0.1f) // Red
-                    playerColor = new Vector4(0.3f, 1.0f, 0.3f, 1.0f); // Green
-                else if (Math.Abs(playerColor.Y - 1.0f) < 0.1f) // Green  
-                    playerColor = new Vector4(0.3f, 0.3f, 1.0f, 1.0f); // Blue
-                else if (Math.Abs(playerColor.Z - 1.0f) < 0.1f) // Blue
-                    playerColor = new Vector4(1.0f, 1.0f, 0.3f, 1.0f); // Yellow
-                else if (Math.Abs(playerColor.X - playerColor.Y) < 0.1f && Math.Abs(playerColor.Y - 1.0f) < 0.1f) // Yellow
-                    playerColor = new Vector4(1.0f, 0.3f, 1.0f, 1.0f); // Magenta
-                else
-                    playerColor = new Vector4(1.0f, 0.3f, 0.3f, 1.0f); // Back to red
-                
-                colorChanged = true;
-                Console.WriteLine($"Color changed to: ({playerColor.X:F1}, {playerColor.Y:F1}, {playerColor.Z:F1})");
-            }
+            // Tag the player for the movement system
+            world.AddComponent(player, new PlayerController(speed: 300.0f));
             
-            if (!window.IsSpacePressed())
-                colorChanged = false;
+            Console.WriteLine($"Player entity created: {player}");
+            
+            // Create some background entities
+            CreateBackground(game);
+            
+            // Create some dynamic entities
+            CreateDynamicEntities(game);
+            
+            Console.WriteLine($"Game world setup complete. Total entities: {world.EntityCount}");
         }
         
-        static void DrawBackground(Renderer renderer)
+        static void CreateBackground(GameManager game)
         {
-            // Draw some background decoration
-            var gridColor = new Vector4(0.2f, 0.2f, 0.3f, 1.0f);
-            var gridSize = new Vector2(20, 20);
+            // Create a grid of background squares
+            var gridColor = new Vector4(0.2f, 0.2f, 0.4f, 1.0f); // Dark blue
+            var gridSize = new Vector2(30, 30);
             
-            // Draw a simple grid pattern
             for (int x = -400; x <= 400; x += 100)
             {
                 for (int y = -300; y <= 300; y += 100)
                 {
-                    renderer.DrawQuad(new Vector2(x, y), gridSize, gridColor);
+                    game.CreateSpriteEntity(
+                        position: new Vector2(x, y),
+                        size: gridSize,
+                        color: gridColor,
+                        layer: -1 // Behind everything
+                    );
                 }
             }
             
-            // Draw border
-            var borderColor = new Vector4(0.4f, 0.4f, 0.5f, 1.0f);
-            var borderThickness = 10.0f;
+            // Create border entities
+            var borderColor = new Vector4(0.5f, 0.5f, 0.6f, 1.0f);
+            var borderThickness = 20.0f;
             
             // Top and bottom borders
-            renderer.DrawQuad(new Vector2(0, 300 - borderThickness/2), new Vector2(800, borderThickness), borderColor);
-            renderer.DrawQuad(new Vector2(0, -300 + borderThickness/2), new Vector2(800, borderThickness), borderColor);
+            game.CreateSpriteEntity(new Vector2(0, 384), new Vector2(1024, borderThickness), borderColor, layer: 1);
+            game.CreateSpriteEntity(new Vector2(0, -384), new Vector2(1024, borderThickness), borderColor, layer: 1);
             
-            // Left and right borders  
-            renderer.DrawQuad(new Vector2(-400 + borderThickness/2, 0), new Vector2(borderThickness, 600), borderColor);
-            renderer.DrawQuad(new Vector2(400 - borderThickness/2, 0), new Vector2(borderThickness, 600), borderColor);
+            // Left and right borders
+            game.CreateSpriteEntity(new Vector2(-512, 0), new Vector2(borderThickness, 768), borderColor, layer: 1);
+            game.CreateSpriteEntity(new Vector2(512, 0), new Vector2(borderThickness, 768), borderColor, layer: 1);
+        }
+        
+        static void CreateDynamicEntities(GameManager game)
+        {
+            var random = new Random();
+            
+            // Create some colorful entities at random positions
+            var colors = new Vector4[]
+            {
+                new Vector4(0.3f, 1.0f, 0.3f, 1.0f), // Green
+                new Vector4(0.3f, 0.3f, 1.0f, 1.0f), // Blue
+                new Vector4(1.0f, 1.0f, 0.3f, 1.0f), // Yellow
+                new Vector4(1.0f, 0.3f, 1.0f, 1.0f), // Magenta
+                new Vector4(0.3f, 1.0f, 1.0f, 1.0f), // Cyan
+            };
+            
+            for (int i = 0; i < 10; i++)
+            {
+                var position = new Vector2(
+                    random.Next(-300, 301),
+                    random.Next(-200, 201)
+                );
+                
+                var size = new Vector2(
+                    random.Next(20, 61),
+                    random.Next(20, 61)
+                );
+                
+                var color = colors[random.Next(colors.Length)];
+                
+                // Some entities have physics, some don't
+                if (i < 5)
+                {
+                    var entity = game.CreatePhysicsEntity(position, size, color, mass: 0.5f);
+                    
+                    // Add some initial velocity
+                    var world = game.GetWorld();
+                    var rigidbody = world.GetComponent<Rigidbody>(entity);
+                    rigidbody.Velocity = new Vector3(
+                        (random.NextSingle() - 0.5f) * 100,
+                        (random.NextSingle() - 0.5f) * 100,
+                        0
+                    );
+                }
+                else
+                {
+                    game.CreateSpriteEntity(position, size, color, layer: 0);
+                }
+            }
+        }
+        
+        static void HandleGameInput(GameManager game)
+        {
+            // Handle adding new entities with space
+            if (game.IsSpaceJustPressed())
+            {
+                var random = new Random();
+                var position = new Vector2(
+                    random.Next(-200, 201),
+                    random.Next(-100, 101)
+                );
+                
+                var colors = new Vector4[]
+                {
+                    new Vector4(1.0f, 0.5f, 0.5f, 1.0f),
+                    new Vector4(0.5f, 1.0f, 0.5f, 1.0f),
+                    new Vector4(0.5f, 0.5f, 1.0f, 1.0f),
+                };
+                
+                var color = colors[random.Next(colors.Length)];
+                
+                game.CreatePhysicsEntity(
+                    position: position,
+                    size: new Vector2(25, 25),
+                    color: color,
+                    mass: 0.3f
+                );
+                
+                Console.WriteLine($"New entity created at {position}. Total: {game.TotalEntities}");
+            }
         }
     }
 }
