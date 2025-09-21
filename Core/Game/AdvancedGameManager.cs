@@ -1,4 +1,4 @@
-// Core/Game/AdvancedGameManager.cs
+// Core/Game/AdvancedGameManager.cs - Updated with Fixed Movement System
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -11,7 +11,7 @@ using BounceGame.Systems;
 namespace BounceGame.Core.Game
 {
     /// <summary>
-    /// Advanced game manager with texture support, camera, and particle systems
+    /// Fixed advanced game manager with proper input handling
     /// </summary>
     public class AdvancedGameManager : IDisposable
     {
@@ -46,7 +46,7 @@ namespace BounceGame.Core.Game
             
             _updateSystems = new List<ISystem>
             {
-                new MovementSystem(_world),
+                new FixedMovementSystem(_world, _window), // Use fixed movement system
                 new AnimationSystem(_world),
                 _particleRenderSystem, // Updates particles
                 _cameraFollowSystem
@@ -58,7 +58,7 @@ namespace BounceGame.Core.Game
                 _particleRenderSystem
             };
             
-            Console.WriteLine("AdvancedGameManager initialized with full rendering pipeline");
+            Console.WriteLine("AdvancedGameManager initialized with fixed input handling");
         }
 
         public Entity CreateSpriteEntity(Vector2 position, Vector2 size, Vector4 color, int layer = 0)
@@ -92,7 +92,7 @@ namespace BounceGame.Core.Game
 
         public void Render(Vector4? clearColor = null)
         {
-            var bgColor = clearColor ?? new Vector4(0.05f, 0.05f, 0.15f, 1.0f);
+            var bgColor = clearColor ?? new Vector4(0.05f, 0.05f, 0.15f, 1.0f); // Dark blue background
             _window.Clear(bgColor.X, bgColor.Y, bgColor.Z, bgColor.W);
             
             foreach (var renderSystem in _renderSystems)

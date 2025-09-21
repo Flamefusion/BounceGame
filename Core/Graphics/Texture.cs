@@ -1,6 +1,7 @@
 // Core/Graphics/Texture.cs
 using System;
 using System.IO;
+using StbImageSharp;
 
 namespace BounceGame.Core.Graphics
 {
@@ -127,23 +128,9 @@ namespace BounceGame.Core.Graphics
             if (!File.Exists(filePath))
                 throw new FileNotFoundException($"Texture file not found: {filePath}");
 
-            // For now, create a placeholder colored texture based on filename
-            // In a real implementation, you'd use a library like StbImage or System.Drawing
-            var fileName = Path.GetFileNameWithoutExtension(filePath);
-            var color = GetColorFromFileName(fileName);
-            
-            Console.WriteLine($"Loading texture from file: {filePath} (using placeholder color)");
-            var pixelData = new byte[64 * 64 * 4];
-            
-            for (int i = 0; i < pixelData.Length; i += 4)
-            {
-                pixelData[i] = (byte)(color.X * 255);     // R
-                pixelData[i + 1] = (byte)(color.Y * 255); // G
-                pixelData[i + 2] = (byte)(color.Z * 255); // B
-                pixelData[i + 3] = (byte)(color.W * 255); // A
-            }
-            
-            LoadFromPixelData(pixelData, 64, 64);
+            ImageResult image = ImageResult.FromStream(File.OpenRead(filePath), ColorComponents.RedGreenBlueAlpha);
+
+            LoadFromPixelData(image.Data, image.Width, image.Height);
         }
 
         private System.Numerics.Vector4 GetColorFromFileName(string fileName)
