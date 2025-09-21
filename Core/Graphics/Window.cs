@@ -67,7 +67,7 @@ namespace BounceGame.Core.Graphics
                 hIcon = IntPtr.Zero,
                 hCursor = Win32.LoadCursor(IntPtr.Zero, Win32.IDC_ARROW),
                 hbrBackground = IntPtr.Zero,
-                lpszMenuName = null!,
+                lpszMenuName = null,
                 lpszClassName = "BounceGameWindow",
                 hIconSm = IntPtr.Zero
             };

@@ -33,6 +33,10 @@ namespace BounceGame.Core.Graphics
         public const uint GL_TEXTURE_MAG_FILTER = 0x2800;
         public const uint GL_NEAREST = 0x2600;
         public const uint GL_LINEAR = 0x2601;
+        public const uint GL_TEXTURE_WRAP_S = 0x2802;
+        public const uint GL_TEXTURE_WRAP_T = 0x2803;
+        public const int GL_CLAMP_TO_EDGE = 0x812F;
+        public const uint GL_TEXTURE0 = 0x84C0;
         public const uint GL_RGBA = 0x1908;
         public const uint GL_UNSIGNED_BYTE = 0x1401;
         public const uint GL_NO_ERROR = 0;
@@ -75,6 +79,8 @@ namespace BounceGame.Core.Graphics
         public delegate void glBindTextureDelegate(uint target, uint texture);
         public delegate void glTexImage2DDelegate(uint target, int level, int internalformat, int width, int height, int border, uint format, uint type, IntPtr pixels);
         public delegate void glTexParameteriDelegate(uint target, uint pname, int param);
+        public delegate void glActiveTextureDelegate(uint texture);
+        public delegate void glDeleteTexturesDelegate(int n, uint[] textures);
 
         // Function pointers
         public static glViewportDelegate? glViewport;
@@ -114,6 +120,8 @@ namespace BounceGame.Core.Graphics
         public static glBindTextureDelegate? glBindTexture;
         public static glTexImage2DDelegate? glTexImage2D;
         public static glTexParameteriDelegate? glTexParameteri;
+        public static glActiveTextureDelegate? glActiveTexture;
+        public static glDeleteTexturesDelegate? glDeleteTextures;
 
         /// <summary>
         /// Load OpenGL function pointers
@@ -157,6 +165,8 @@ namespace BounceGame.Core.Graphics
             glBindTexture = GetFunction<glBindTextureDelegate>("glBindTexture");
             glTexImage2D = GetFunction<glTexImage2DDelegate>("glTexImage2D");
             glTexParameteri = GetFunction<glTexParameteriDelegate>("glTexParameteri");
+            glActiveTexture = GetFunction<glActiveTextureDelegate>("glActiveTexture");
+            glDeleteTextures = GetFunction<glDeleteTexturesDelegate>("glDeleteTextures");
         }
 
         private static IntPtr opengl32Module = Win32.GetModuleHandle("opengl32.dll");
@@ -249,7 +259,7 @@ namespace BounceGame.Core.Graphics
             public IntPtr hIcon;
             public IntPtr hCursor;
             public IntPtr hbrBackground;
-            public string lpszMenuName;
+            public string? lpszMenuName;
             public string lpszClassName;
             public IntPtr hIconSm;
         }

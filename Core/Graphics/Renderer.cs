@@ -1,6 +1,7 @@
 // Core/Graphics/Renderer.cs - Debug Version with Logging
 using System;
 using System.Numerics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BounceGame.Core.Graphics
 {
@@ -30,6 +31,9 @@ namespace BounceGame.Core.Graphics
             Console.WriteLine($"Projection matrix created for screen size {screenWidth}x{screenHeight}");
         }
 
+        [MemberNotNull(nameof(_quadVAO))]
+        [MemberNotNull(nameof(_quadVBO))]
+        [MemberNotNull(nameof(_quadEBO))]
         private void InitializeQuadRendering()
         {
             Console.WriteLine("Setting up quad rendering...");
@@ -62,6 +66,7 @@ namespace BounceGame.Core.Graphics
             Console.WriteLine("Quad rendering setup complete");
         }
 
+        [MemberNotNull(nameof(_defaultShader))]
         private void CreateDefaultShader()
         {
             Console.WriteLine("Creating default shader...");
@@ -138,7 +143,7 @@ namespace BounceGame.Core.Graphics
             _defaultShader.SetUniform("uTintColor", color);
 
             _quadVAO.Bind();
-            GL.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, IntPtr.Zero);
+            GL.glDrawElements?.Invoke(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, IntPtr.Zero);
             GL.CheckError("Draw quad");
             _quadVAO.Unbind();
         }
