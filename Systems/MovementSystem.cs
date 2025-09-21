@@ -65,9 +65,11 @@ namespace BounceGame.Systems
                     inputForce = Vector3.Normalize(inputForce) * playerController.Speed;
                     rigidbody.AddForce(inputForce);
                 }
-                
-                // Apply drag to player for responsive controls
-                rigidbody.Velocity *= (1.0f - rigidbody.Drag * deltaTime);
+                else
+                {
+                    // Apply drag to player for responsive controls only when there is no input
+                    rigidbody.Velocity *= (1.0f - rigidbody.Drag * deltaTime);
+                }
             }
         }
         
@@ -81,16 +83,13 @@ namespace BounceGame.Systems
                     continue;
                 
                 // Apply gravity
-                if (rigidbody.UseGravity)
+                if (rigidbody.UseGravity && !_world.HasComponent<PlayerController>(entity))
                 {
                     rigidbody.AddForce(Gravity * rigidbody.Mass);
                 }
                 
                 // Update velocity from acceleration
                 rigidbody.Velocity += rigidbody.Acceleration * deltaTime;
-                
-                // Apply general drag
-                rigidbody.Velocity *= (1.0f - rigidbody.Drag * deltaTime * 0.5f);
                 
                 // Reset acceleration (forces are applied each frame)
                 rigidbody.Acceleration = Vector3.Zero;

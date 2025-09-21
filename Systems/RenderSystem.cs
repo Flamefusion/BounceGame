@@ -15,14 +15,14 @@ namespace BounceGame.Systems
     public class RenderSystem : IRenderSystem
     {
         private readonly World _world;
-        private readonly Renderer _renderer;
+        private readonly DebugRenderer _renderer;
         private bool _disposed = false;
 
         // Render statistics
         public int EntitiesRendered { get; private set; }
         public int DrawCalls { get; private set; }
 
-        public RenderSystem(World world, Renderer renderer)
+        public RenderSystem(World world, DebugRenderer renderer)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
